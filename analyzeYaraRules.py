@@ -68,8 +68,47 @@ def detectDuplicates(yaraFiles, duplicateFilePath):
 
   return filesProcessed, rulesProcessed
 
+# def injectMetaCategory(ruleContent, category, matchedKeyword):
+#   rulePattern = re.compile(r'(^\s*rule\s+[a-zA-Z0-9_]+\s*{)', re.MULTILINE)
+#   parts = rulePattern.split(ruleContent)
+
+#   if not parts or len(parts) < 2:
+#     return ruleContent  # No rule detected
+
+#   rebuilt = parts[0]  # Anything before the first rule (e.g., includes or comments)
+
+#   for i in range(1, len(parts), 2):
+#     ruleHeader = parts[i]
+#     ruleBody = parts[i+1]
+
+#     if 'meta:' in ruleBody:
+#       metaStart = ruleBody.find('meta:')
+#       stringsStart = ruleBody.find('strings:', metaStart)
+#       if stringsStart == -1:
+#         stringsStart = ruleBody.find('condition:', metaStart)
+#       if stringsStart != -1:
+#         beforeMeta = ruleBody[:stringsStart]
+#         afterMeta = ruleBody[stringsStart:]
+#         if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta:
+#           injected = f'  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n'
+#           ruleBody = beforeMeta.rstrip() + '\n' + injected + afterMeta
+#         else:
+#           ruleBody = re.sub(r'(category\s*=\s*".*?")', f'category = "{category}"', ruleBody)
+#           ruleBody = re.sub(r'(matchedKeyword\s*=\s*".*?")', f'matchedKeyword = "{matchedKeyword}"', ruleBody)
+#     else:
+#       ruleBody = ruleBody.replace(
+#         'strings:',
+#         f'meta:\n  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n  strings:',
+#         1
+#       )
+
+#     rebuilt += ruleHeader + ruleBody
+
+#   return rebuilt
+
 def injectMetaCategory(ruleContent, category, matchedKeyword):
-  rulePattern = re.compile(r'(^\s*rule\s+[a-zA-Z0-9_]+\s*{)', re.MULTILINE)
+  # rulePattern = re.compile(r'(^\s*rule\s+[a-zA-Z0-9_]+\s*{)', re.MULTILINE)
+  rulePattern = re.compile(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)', re.MULTILINE)
   parts = rulePattern.split(ruleContent)
 
   if not parts or len(parts) < 2:
@@ -79,9 +118,11 @@ def injectMetaCategory(ruleContent, category, matchedKeyword):
 
   for i in range(1, len(parts), 2):
     ruleHeader = parts[i]
-    ruleBody = parts[i+1]
+    ruleBody = parts[i + 1]
 
+    # Check if 'meta:' exists in the rule
     if 'meta:' in ruleBody:
+      # If the 'meta:' section exists, we need to check if the 'category' and 'matchedKeyword' already exist
       metaStart = ruleBody.find('meta:')
       stringsStart = ruleBody.find('strings:', metaStart)
       if stringsStart == -1:
@@ -89,6 +130,8 @@ def injectMetaCategory(ruleContent, category, matchedKeyword):
       if stringsStart != -1:
         beforeMeta = ruleBody[:stringsStart]
         afterMeta = ruleBody[stringsStart:]
+
+        # Only inject 'category' and 'matchedKeyword' if they don't already exist
         if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta:
           injected = f'  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n'
           ruleBody = beforeMeta.rstrip() + '\n' + injected + afterMeta
@@ -96,6 +139,7 @@ def injectMetaCategory(ruleContent, category, matchedKeyword):
           ruleBody = re.sub(r'(category\s*=\s*".*?")', f'category = "{category}"', ruleBody)
           ruleBody = re.sub(r'(matchedKeyword\s*=\s*".*?")', f'matchedKeyword = "{matchedKeyword}"', ruleBody)
     else:
+      # If 'meta:' doesn't exist, create a 'meta:' section and inject 'category' and 'matchedKeyword'
       ruleBody = ruleBody.replace(
         'strings:',
         f'meta:\n  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n  strings:',
@@ -110,6 +154,7 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
   categorizedCount = 0
   uncategorizedCount = 0
 
+  # Create directories for each category and 'uncategorized' if not already created
   for cat in keywordCategories.keys():
     os.makedirs(os.path.join(checkedDir, cat), exist_ok=True)
   os.makedirs(os.path.join(checkedDir, 'uncategorized'), exist_ok=True)
@@ -118,10 +163,10 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
     with open(file, 'r', encoding='utf-8', errors='ignore') as f:
       lines = f.readlines()
     ruleContent = ''.join(lines)
+
     for line in lines:
-      # match = re.match(r'^\s*rule\s+([a-zA-Z0-9_]+)', line)
-      # match = re.match(r'^\s*([A-Za-z0-9]*\s*rule\s*[A-Za-z0-9]+\s*):(\s*[A-Za-z0-9]+\s*)+{', line)
-      match = re.match(r'^\s*([A-Za-z]\s*)*rule\s+([a-zA-Z0-9_]+)', line)
+      # Match the rule name in the yara file
+      match = re.match(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)', line)
       if match:
         ruleName = match.group(1)
         category = 'uncategorized'
@@ -130,7 +175,7 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
         parentDir = os.path.basename(os.path.dirname(file))
         matchedKeyword = None
 
-        # Check if folder name matches any keyword
+        # Check if folder name (parentDir) matches any category keyword
         folderMatched = False
         for cat, keywords in keywordCategories.items():
           for keyword in [k.strip() for k in keywords.split(',')]:
@@ -142,15 +187,22 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
           if folderMatched:
             break
 
-        # Proceed with default method if folder name didn't match
+        # If no folder match, check rule name, file name, and content for keyword match
         if not folderMatched:
           for cat, keywords in keywordCategories.items():
             for keyword in [k.strip() for k in keywords.split(',')]:
               keywordPattern = re.compile(re.escape(keyword), re.IGNORECASE)
-              if keywordPattern.search(ruleName) or keywordPattern.search(fileNameNoExt):
+              # Check rule name
+              if keywordPattern.search(ruleName):
                 category = cat
                 matchedKeyword = keyword
                 break
+              # Check file name without extension
+              elif keywordPattern.search(fileNameNoExt):
+                category = cat
+                matchedKeyword = keyword
+                break
+              # Check file content for the keyword
               with open(file, 'r', encoding='utf-8', errors='ignore') as content:
                 if keywordPattern.search(content.read()):
                   category = cat
@@ -159,6 +211,7 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
             if category != 'uncategorized':
               break
 
+        # Handle uncategorized rules by creating a folder based on the parent directory name
         if category == 'uncategorized':
           category = f"uncategorized/{parentDir}"
           os.makedirs(os.path.join(checkedDir, category), exist_ok=True)
@@ -166,14 +219,17 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
         else:
           categorizedCount += 1
 
+        # Inject meta category and matchedKeyword into the rule
         ruleContent = injectMetaCategory(ruleContent, category, matchedKeyword)
 
+        # Write the categorized rule content to the appropriate folder
         destPath = os.path.join(checkedDir, category, fileName)
         with open(destPath, 'w', encoding='utf-8') as outputFile:
           outputFile.write(ruleContent)
 
-        print(f"{Colors.greenBold}[+]{Colors.reset} Categorized rule {Colors.green}{ruleName}{Colors.reset} from {Colors.yellow}{file}{Colors.reset} as {Colors.yellowBold}{category}{Colors.reset}")
-  
+        # Print out feedback on categorization
+        # print(f"{Colors.greenBold}[+]{Colors.reset} Categorized rule {Colors.green}{ruleName}{Colors.reset} from {Colors.yellow}{file}{Colors.reset} as {Colors.yellowBold}{category}{Colors.reset}")
+
   return categorizedCount, uncategorizedCount
 
 def dumpCategoriesToFile(keywordCategories, file):
