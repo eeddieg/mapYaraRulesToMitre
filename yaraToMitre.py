@@ -226,7 +226,7 @@ uncategorizedMap =  {
     ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
     ["TA1062", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
   ],
-  "IndiaJuliett": [
+  "IndiaJuliett_1": [
     ["TA0010", "Exfiltration", "T1048", "Exfiltration Over Alternative Protocol", None, None],
     ["TA0006", "Credential Access", "T1555", "Credentials from Password Stores", None, None],
     ["TA0040", "Impact", "T1489", "Service Stop", None, None],
@@ -260,7 +260,7 @@ uncategorizedMap =  {
     ["TA0005", "Exfiltration", "T1105", "Remote File Copy", None, None],
     ["TA0003", "Persistence", "T1203", "Exploitation for Client Execution", None, None],
   ],
-  "RomeoGolf_mod": [
+  "RomeoGolf": [
     ["TA1027", "Obfuscation", "T1027", "Obfuscated Files or Information", None, None],
     ["TA1071", "Command and Control", "T1071", "Application Layer Protocol", None, None],
     ["TA1082", "Discovery", "T1082", "System Information Discovery", None, None],
@@ -276,14 +276,7 @@ uncategorizedMap =  {
     ["TA0006", "Credential Dumping", "T1003", "OS Credential Dumping", None, None],
     ["TA0004", "Privilege Escalation", "T1082", "System Information Discovery", None, None],
   ],
-  "SierraJuliettMikeOne": [
-    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
-    ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
-    ["TA0009", "Collection", "T1005", "Data from Local System", None, None],
-    ["TA0011", "Command and Control", "T1071", "Application Layer Protocol", None, None],
-    ["TA0003", "Persistence", "T1072", "Standard Application Layer Protocol", None, None],
-  ],
-  "SierraJuliettMikeTwo": [
+  "RomeoJuliettMikeTwo": [
     ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
     ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
     ["TA0009", "Collection", "T1005", "Data from Local System", None, None],
@@ -292,7 +285,20 @@ uncategorizedMap =  {
     ["TA0006", "Credential Access", "T1081", "Credentials from Password Stores", None, None],
     ["TA0010", "Exfiltration", "T1020", "Automated Exfiltration", None, None],
   ],
-  "suicidescripts": [
+  "SierraJuliettMikeOne": [
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
+    ["TA0009", "Collection", "T1005", "Data from Local System", None, None],
+    ["TA0011", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+    ["TA0003", "Persistence", "T1072", "Standard Application Layer Protocol", None, None],
+  ],
+  "SuicideScriptL1": [
+    ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell", None, None],
+  ],
+  "SuicideScriptR1_Multi": [
+    ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell", None, None],
+  ],
+  "SuicideScriptR": [
     ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell", None, None],
   ],
   "TangoAlfa": [
@@ -783,12 +789,16 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
   unmatchedRules = []
 
   # Pattern to match rule name
-  rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
+  # rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
+  rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)\s*\{', re.MULTILINE)
+
   
   # Convert the uncategorizedMap keys to lowercase
   uncategorizedMapLowercase = {key.lower(): value for key, value in uncategorizedMap.items()}
   
   for rule in unmappedSet:
+    rule = "\n".join([line for line in rule.splitlines() if not line.strip().startswith("//")])
+
     match = rulePattern.match(rule)
     
     if match:
