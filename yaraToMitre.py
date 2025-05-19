@@ -496,7 +496,9 @@ def readYaraFilesByCategory(directory):
       with open(filePath, "r", encoding="utf-8") as f:
         content = f.read()
 
+        # ruleMatches = re.findall(r"rule\s+.*?\{.*?\}", content, re.DOTALL)
         ruleMatches = re.findall(r"rule\s+.*?\{.*?\}", content, re.DOTALL)
+        # ruleMatches = re.findall(r"^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)", content, re.DOTALL)
 
         if category not in yaraByCategory:
           yaraByCategory[category] = []
@@ -543,10 +545,6 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       if not ttpMatches and folderCategory in mitreMapping:
         categoryMapping = mitreMapping[folderCategory]
         for keyword, mitreEntries in categoryMapping.items():
-          print(ruleContent)
-          print(keyword)
-          print(mitreEntries)
-          print()
           if re.search(keyword, ruleContent, re.IGNORECASE):
             for entry in mitreEntries:
               tacticId, tactic, techniqueId, technique, subtechniqueId, subtechnique = entry
