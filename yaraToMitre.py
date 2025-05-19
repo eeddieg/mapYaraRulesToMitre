@@ -198,39 +198,201 @@ YaraToMitreMapping = {
     r"net\s+stop\s+\"?Volume Shadow Copy\"?": [("Impact", "T1490", 80)],
 }
 
-categoryToMitreMapping = {
-  "malware": {
+categoryToMitreMapping = {}
+
+uncategorizedMap =  {
+  "HotelAlfa": [
+    ["TA1027", "Obfuscation", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA1055", "Persistence", "T1055", "Process Injection", None, None],
+    ["TA1083", "Discovery", "T1083", "File and Directory Discovery", None, None],
+  ],
+  "IndiaDelta": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+    ["TA1071", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+  ],
+  "IndiaEcho": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
+    ["TA1071", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+  ],
+  "IndiaGolf": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+    ["TA1071", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+  ],
+  "IndiaHotel": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+    ["TA1062", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+  ],
+  "IndiaJuliett": [
+    ["TA0010", "Exfiltration", "T1048", "Exfiltration Over Alternative Protocol", None, None],
+    ["TA0006", "Credential Access", "T1555", "Credentials from Password Stores", None, None],
+    ["TA0040", "Impact", "T1489", "Service Stop", None, None],
+    ["TA0005", "Defense Evasion", "T1070.004", "Indicator Removal on Host: File Deletion", None, None],
+  ],
+  "LimaCharlie": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0003", "Persistence", "T1547", "Boot or Logon Autostart Execution", None, None],
+  ],
+  "PapaAlfa": [
+    ["TA0011", "Command and Control", "T1102", "Web Service", None, None],
+    ["TA0005", "Defense Evasion", "T1036", "Masquerading", None, None],
+    ["TA0006", "Credential Access", "T1557", "Adversary-in-the-Middle", None, None],
+  ],
+  "RomeoAlfa": [
+    ["TA0002", "Execution", "T1053.005", "Scheduled Task/Job: Scheduled Task", None, None],
+  ],
+  "RomeoDelta": [
+    ["TA0001", "Execution", "T1071.001", "Application Layer Protocol: Application Layer Protocol", None, None],
+  ],
+  "RomeoEcho": [
+    ["TA0001", "Execution", "T1071.001", "Application Layer Protocol: Application Layer Protocol", None, None],
+  ],
+  "RomeoFoxtrot_mod": [
+    ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0003", "Persistence", "T1053", "Scheduled Task/Job", None, None],
+    ["TA0011", "Command and Control", "T1071.001", "Application Layer Protocol: Web Shell", None, None],
+    ["TA0010", "Exfiltration", "T1048", "Exfiltration Over Alternative Protocol", None, None],
+    ["TA0005", "Exfiltration", "T1105", "Remote File Copy", None, None],
+    ["TA0003", "Persistence", "T1203", "Exploitation for Client Execution", None, None],
+  ],
+  "RomeoGolf_mod": [
+    ["TA1027", "Obfuscation", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA1071", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+    ["TA1082", "Discovery", "T1082", "System Information Discovery", None, None],
+    ["TA1105", "Command and Control", "T1105", "Remote File Copy", None, None]
+  ],
+  "RomeoHotel": [
+    ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0005", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+    ["TA0003", "Persistence", "T1072", "Standard Application Layer Protocol", None, None],
+    ["TA0011", "Command and Control", "T1071.001", "Application Layer Protocol: Web Shell", None, None],
+    ["TA0009", "Collection", "T1075", "Data from Local System", None, None],
+    ["TA0006", "Credential Dumping", "T1003", "OS Credential Dumping", None, None],
+    ["TA0004", "Privilege Escalation", "T1082", "System Information Discovery", None, None],
+  ],
+  "SierraJuliettMikeOne": [
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
+    ["TA0009", "Collection", "T1005", "Data from Local System", None, None],
+    ["TA0011", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+    ["TA0003", "Persistence", "T1072", "Standard Application Layer Protocol", None, None],
+  ],
+  "SierraJuliettMikeTwo": [
+    ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter", None, None],
+    ["TA0007", "Discovery", "T1083", "File and Directory Discovery", None, None],
+    ["TA0009", "Collection", "T1005", "Data from Local System", None, None],
+    ["TA0011", "Command and Control", "T1071", "Application Layer Protocol", None, None],
+    ["TA0003", "Persistence", "T1072", "Standard Application Layer Protocol", None, None],
+    ["TA0006", "Credential Access", "T1081", "Credentials from Password Stores", None, None],
+    ["TA0010", "Exfiltration", "T1020", "Automated Exfiltration", None, None],
+  ],
+  "suicidescripts": [
+    ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell", None, None],
+  ],
+  "TangoAlfa": [
+    ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell", None, None],
+    ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+  ],
+  "TangoBravo": [
+    ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: JavaScript", None, None],
+    ["TA0001", "Execution", "T1071.001", "Application Layer Protocol: Application Layer Protocol", None, None],
+  ],
+  "UniformAlfa": [
+    ["TA0007", "Persistence", "T1543.003", "Registry Run Keys / Startup Folder: Windows Service", None, None],
+    ["TA0007", "Persistence", "T1543.001", "Registry Run Keys / Startup Folder: New Service", None, None],
+    ["TA0003", "Persistence", "T1071.001", "Application Layer Protocol: Application Layer Protocol", None, None],
+  ],
+  "UniformJuliett": [
+    ["TA0007", "Persistence", "T1543.003", "Registry Run Keys / Startup Folder: Windows Service", None, None],
+    ["TA0007", "Persistence", "T1543.001", "Registry Run Keys / Startup Folder: New Service", None, None],
+    ["TA0005", "Defense Evasion", "T1089", "Disabling Security Tools", None, None],
+    ["TA0003", "Persistence", "T1071.001", "Application Layer Protocol: Application Layer Protocol", None, None],
+  ],
+  "WhiskeyDelta": [
+    ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
+    ["TA0005", "Defense Evasion", "T1036", "Masquerading", None, None],
+    ["TA0007", "Persistence", "T1547.001", "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder", None, None],
+  ],
+}
+
+def createDictionary():
+
+  malware = {
     "malware": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
+      ["TA0002", "Execution", "T1071", "Application Layer Protocol", None, None],
+      ["TA0003", "Persistence", "T1071", "Application Layer Protocol", None, None],
+      ["TA0004", "Privilege Escalation", "T1068", "Exploitation for Privilege Escalation", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
-      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
+      ["TA0005", "Defense Evasion", "T1071", "Application Layer Protocol", None, None],
+      ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None],
+      ["TA0009", "Collection", "T1114", "Email Collection", None, None]
     ],
     "trojan": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
+      ["TA0002", "Execution", "T1071", "Application Layer Protocol", None, None],
+      ["TA0003", "Persistence", "T1071", "Application Layer Protocol", None, None],
+      ["TA0004", "Privilege Escalation", "T1068", "Exploitation for Privilege Escalation", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
-      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
-    ],
+      ["TA0005", "Defense Evasion", "T1071", "Application Layer Protocol", None, None],
+      ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None],
+      ["TA0009", "Collection", "T1114", "Email Collection", None, None]    ],
     "ransomware": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
-      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
+      ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None],
+      ["TA0042", "Resource Development", "T1587", "Exploitation for Resource Development", None, None]
     ],
     "virus": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
-      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
+      ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None],
+      ["TA0042", "Resource Development", "T1587", "Exploitation for Resource Development", None, None]
     ],
     "worm": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
-      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
+      ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
+      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None],
+      ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None],
+      ["TA0042", "Resource Development", "T1587", "Exploitation for Resource Development", None, None]
     ],
     "infostealer": [
       ["TA0009", "Collection", "T1114", "Email Collection", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
     ]
-  },
-  "exploit": {
+  }
+
+  exploit = {
     "exploit": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
@@ -257,8 +419,9 @@ categoryToMitreMapping = {
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
       ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
     ]
-  },
-  "network": {
+  }
+
+  network = {
     "network": [
       ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
@@ -287,47 +450,74 @@ categoryToMitreMapping = {
       ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
     ],
-    "command-and-control": [
+    "commandAndControl": [
       ["TA0006", "Credential Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
     ]
-  },
-  "document": {
+  }
+
+  document = {
     "document": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
       ["TA0040", "Impact", "T1486", "Data Encrypted for Impact", None, None]
     ],
     "pdf": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "doc": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "docx": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "office": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "macro": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "xls": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1059.005", "Command and Scripting Interpreter: Visual Basic", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ],
     "ppt": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
+      ["TA0001", "Initial Access", "T1566.001", "Phishing: Spearphishing Attachment", None, None],
+      ["TA0002", "Execution", "T1203", "Exploitation for Client Execution", None, None],
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ]
-  },
-  "packer": {
+  }
+
+  packer = {
     "packer": [
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None],
       ["TA0007", "Discovery", "T1071", "Application Layer Protocol", None, None],
@@ -345,8 +535,9 @@ categoryToMitreMapping = {
     "polymorphic": [
       ["TA0005", "Defense Evasion", "T1027", "Obfuscated Files or Information", None, None]
     ]
-  },
-  "crypto": {
+  }
+
+  crypto = {
     "crypto": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
@@ -371,8 +562,9 @@ categoryToMitreMapping = {
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
       ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
     ]
-  },
-  "keylogger": {
+  }
+
+  keylogger = {
     "keylogger": [
       ["TA0009", "Collection", "T1116", "Input Capture", None, None]
     ],
@@ -381,16 +573,30 @@ categoryToMitreMapping = {
     ],
     "credentials": [
       ["TA0009", "Collection", "T1071", "Application Layer Protocol", None, None],
-      ["TA0011", "Exfiltration", "T1041", "Exfiltration Over Command and Control Channel", None, None]
-    ],
-    "password": [
-      ["TA0009", "Collection", "T1116", "Input Capture", None, None]
-    ],
-    "steal": [
-      ["TA0009", "Collection", "T1116", "Input Capture", None, None]
+      ["TA0004", "Privilege Escalation", "T1075", "Exploitation of Privilege Escalation", None, None]
     ]
   }
-}
+
+  execution = {
+    "binary": ["TA0002", "Execution", "T1204.002", "User Execution: Malicious File"],
+    "cmd": ["TA0002", "Execution", "T1059.003", "Command and Scripting Interpreter: Windows Command Shell"],
+    "js": ["TA0002", "Execution", "T1059.007", "Command and Scripting Interpreter: JavaScript"],
+    "python": ["TA0002", "Execution", "T1059.006", "Command and Scripting Interpreter: Python"],
+    "ps": ["TA0002", "Execution", "T1059.001", "Command and Scripting Interpreter: PowerShell"],
+    "scheduledTask": ["TA0002", "Execution", "T1053.005", "Scheduled Task/Job: Scheduled Task"],
+    "script": ["TA0002", "Execution", "T1059", "Command and Scripting Interpreter"],
+  }
+
+  categoryToMitreMapping["crypto"] = crypto
+  categoryToMitreMapping["document"] = document
+  categoryToMitreMapping["execution"] = execution
+  categoryToMitreMapping["exploit"] = exploit
+  categoryToMitreMapping["keylogger"] = keylogger
+  categoryToMitreMapping["malware"] = malware
+  categoryToMitreMapping["network"] = network
+  categoryToMitreMapping["packer"] = packer
+
+  return categoryToMitreMapping
 
 def reset():
   dir1 = "checkedRules"
@@ -529,28 +735,27 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       counters['rulesProcessed'] += 1
       ttpMatches = []
 
-      # Step 1: Pattern matching against yaraToAttack
-      for pattern, mitreList in yaraToAttack.items():
-        if re.search(pattern, ruleContent, re.IGNORECASE):
-          for tactic, techniqueId, confidence in mitreList:
-            ttpMatches.append({
-              "matchSource": "pattern",
-              "pattern": pattern,
-              "tactic": tactic,
-              "techniqueId": techniqueId,
-              "confidence": confidence
-            })
+      # Extract category and matchedKeyword from the rule's meta
+      category = ""
+      matchedKeyword = ""
+      ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+      ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+      if ruleCategoryMatch:
+        category = ruleCategoryMatch.group(1)
+      if ruleMatchedKeywordMatch:
+        matchedKeyword = ruleMatchedKeywordMatch.group(1)
 
-      # Step 2: Fallback using folder category and mitreMapping if no match found
-      if not ttpMatches and folderCategory in mitreMapping:
-        categoryMapping = mitreMapping[folderCategory]
+      # Check if category exists in categoryToMitreMapping
+      if category in mitreMapping:
+        categoryMapping = mitreMapping[category]
         for keyword, mitreEntries in categoryMapping.items():
-          if re.search(keyword, ruleContent, re.IGNORECASE):
+          if re.search(matchedKeyword, keyword, re.IGNORECASE):
             for entry in mitreEntries:
               tacticId, tactic, techniqueId, technique, subtechniqueId, subtechnique = entry
               ttpMatches.append({
-                "matchSource": "categoryMapping",
-                "keyword": keyword,
+                "matchSource": "categoryToMitreMapping dictionary",
+                "category": category,
+                "matchedKeyword": matchedKeyword,
                 "tacticId": tacticId,
                 "tactic": tactic,
                 "techniqueId": techniqueId,
@@ -560,43 +765,11 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
                 "confidence": 50
               })
 
-      # Step 3: Handle unmatched rules and check category and matchedKeyword for mapping
+        counters['rulesMatched'] += 1
+
       if not ttpMatches:
         counters['rulesUnmatched'] += 1
-
-        # Extract category and matchedKeyword from the rule's meta
-        match = re.search(r"category\s*=\s*\"([^\"]+)\".*matchedKeyword\s*=\s*\"([^\"]+)\"", ruleContent, re.DOTALL)
-        if match:
-          category = match.group(1)
-          matchedKeyword = match.group(2)
-          
-          # Check if category exists in categoryToMitreMapping
-          if category in mitreMapping:
-            categoryMapping = mitreMapping[category]
-            for keyword, mitreEntries in categoryMapping.items():
-              if re.search(matchedKeyword, keyword, re.IGNORECASE):
-                for entry in mitreEntries:
-                  tacticId, tactic, techniqueId, technique, subtechniqueId, subtechnique = entry
-                  ttpMatches.append({
-                    "matchSource": "categoryMappingKeywordMatch",
-                    "category": category,
-                    "matchedKeyword": matchedKeyword,
-                    "tacticId": tacticId,
-                    "tactic": tactic,
-                    "techniqueId": techniqueId,
-                    "technique": technique,
-                    "subtechniqueId": subtechniqueId,
-                    "subtechnique": subtechnique,
-                    "confidence": 50
-                  })
-
-        unmatchedRules.append({
-          "category": categoryPath,
-          "rule": ruleContent
-        })
-
-      else:
-        counters['rulesMatched'] += 1
+        unmatchedRules.append(ruleContent)
 
       mappedResults.append({
         "category": categoryPath,
@@ -605,6 +778,70 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       })
 
   return mappedResults, unmatchedRules, counters
+
+def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
+  unmatchedRules = []
+
+  # Pattern to match rule name
+  rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
+  
+  # Convert the uncategorizedMap keys to lowercase
+  uncategorizedMapLowercase = {key.lower(): value for key, value in uncategorizedMap.items()}
+  
+  for rule in unmappedSet:
+    match = rulePattern.match(rule)
+    
+    if match:
+      ttpMatches = []
+      ruleName = match.group(1).lower()
+      category = ""
+      matchedKeyword = ""
+
+      # Extract category from rule's meta
+      ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
+      if ruleCategoryMatch:
+        # Extract category
+        category = ruleCategoryMatch.group(1).split("/")[1]
+
+      # Extract matchedKeyword from rule's meta
+      ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
+      if ruleMatchedKeywordMatch:
+        matchedKeyword = ruleMatchedKeywordMatch.group(1)
+
+      # Try to match ruleName against uncategorizedMap (now using lowercase for comparison)
+      if ruleName in uncategorizedMapLowercase:
+        uncategorizedEntries = uncategorizedMapLowercase[ruleName]
+        for entry in uncategorizedEntries:
+          tacticId, tactic, techniqueId, technique, subtechniqueId, subtechnique = entry
+          ttpMatches.append({
+            "matchSource": "uncategorizedMap dictionary",
+            "category": category,
+            "matchedKeyword": matchedKeyword,
+            "tacticId": tacticId,
+            "tactic": tactic,
+            "techniqueId": techniqueId,
+            "technique": technique,
+            "subtechniqueId": subtechniqueId,
+            "subtechnique": subtechnique,
+            "confidence": 50
+          })
+
+        # If a match is found, reduce unmatched counter
+        counters['rulesUnmatched'] -= 1
+        counters['rulesMatched'] += 1
+    
+        # Add the rule to mappedSet with its TTP matches (if any)
+        mappedSet.append({
+          "category": category,
+          "rule": rule[:300],  # Limiting the rule string to 300 characters
+          "mappedTTPs": ttpMatches if ttpMatches else None
+        })
+
+    # If no match is found, log it
+    if not ttpMatches:
+      unmatchedRules.append(rule)
+
+  return mappedSet, unmatchedRules, counters
 
 def main():
   # File paths
@@ -657,6 +894,9 @@ def main():
   tacticMap = mapTacticsWithTechniques(tactics)
   techniqueMap = mapTechniquesWithSubtechniques(techniques, tacticMap)
 
+  # Construct the dictionary
+  categoryToMitreMapping = createDictionary()
+
   # Read rules
   print(f"Reading YARA rules from directory {Colors.blue}{outputCategoryDir}{Colors.reset}...")
   yaraByCategory = readYaraFilesByCategory(outputCategoryDir)
@@ -670,6 +910,14 @@ def main():
     yaraByCategory,
     YaraToMitreMapping,
     categoryToMitreMapping 
+  )
+  
+  # Try to resolve unmatched rules
+  mappedResults, unmatchedRules,counters = resolveUncategorized(
+    mappedResults,
+    unmatchedRules,
+    counters,
+    uncategorizedMap 
   )
 
   if counters['rulesUnmatched'] == 0:

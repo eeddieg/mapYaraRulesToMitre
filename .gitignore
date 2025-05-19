@@ -10,4 +10,4 @@ categorizedRules/
 confidence/
 enterprise-attack.json
 snort3-community.rules
-*.bak
+*.bak*
