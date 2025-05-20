@@ -34,11 +34,13 @@ Once **`analyzeYaraRules.py`** has completed, run the **`yaraToMitre.py`** scrip
 
 ```bash
 python analyzeYaraRules.py -D /path/to/yara-rules
-   
+```
+
 2. **Run `yaraToMitre.py`** to map the analyzed YARA rules to the MITRE ATT&CK framework.
 
 ```bash
 python yaraToMitre.py -D /path/to/yara-rules
+```
 
 ---
 
