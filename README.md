@@ -31,7 +31,16 @@ Once **`analyzeYaraRules.py`** has completed, run the **`yaraToMitre.py`** scrip
 ## **Required Workflow**
 
 1. **Run `analyzeYaraRules.py`** to analyze the YARA rules and prepare the data.
+
+```bash
+python analyzeYaraRules.py -D /path/to/yara-rules
+```
+
 2. **Run `yaraToMitre.py`** to map the analyzed YARA rules to the MITRE ATT&CK framework.
+
+```bash
+python yaraToMitre.py -D /path/to/yara-rules
+```
 
 ---
 

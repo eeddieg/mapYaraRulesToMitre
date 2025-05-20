@@ -949,6 +949,17 @@ def main():
   print(f"Rules Matched    : {Colors.green}{counters['rulesMatched']}{Colors.reset}")
   print(f"Rules Unmatched  : {Colors.red}{counters['rulesUnmatched']}{Colors.reset}\n")
 
+  # # Convert the set of unique results back to a list and create DataFrame
+  # uniqueResultsList = [item for item in mappedResults]  # No need to parse JSON again
+  # df = pd.DataFrame(uniqueResultsList)
+
+  # if df.empty:
+  #     print("No data to write to CSV.")
+  # else:
+  #     df.to_csv(outputCsvPath, index=False, sep=",", quoting=1, quotechar='"')
+  #     print(f"Mapped rules are stored in {Colors.blueBold}{outputCsvPath}{Colors.reset}\n")
+
+
   # Save results as JSON
   with open(outputJsonPath, "w") as f:
     json.dump(mappedResults, f, indent=2) 
