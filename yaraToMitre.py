@@ -744,12 +744,18 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       # Extract category and matchedKeyword from the rule's meta
       category = ""
       matchedKeyword = ""
+      confidenceScore = ""
+
       ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
       ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+      ruleConfidenceScoreMatch = re.search(r'confidence\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+      
       if ruleCategoryMatch:
         category = ruleCategoryMatch.group(1)
       if ruleMatchedKeywordMatch:
         matchedKeyword = ruleMatchedKeywordMatch.group(1)
+      if ruleConfidenceScoreMatch:
+        confidenceScore = ruleConfidenceScoreMatch.group(1)
 
       # Check if category exists in categoryToMitreMapping
       if category in mitreMapping:
@@ -759,7 +765,7 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
             for entry in mitreEntries:
               tacticId, tactic, techniqueId, technique, subtechniqueId, subtechnique = entry
               ttpMatches.append({
-                "matchSource": "categoryToMitreMapping dictionary",
+                "matchSource": "MitreMapping dictionary",
                 "category": category,
                 "matchedKeyword": matchedKeyword,
                 "tacticId": tacticId,
@@ -768,7 +774,7 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
                 "technique": technique,
                 "subtechniqueId": subtechniqueId,
                 "subtechnique": subtechnique,
-                "confidence": 50
+                "confidence": confidenceScore
               })
 
         counters['rulesMatched'] += 1
@@ -779,7 +785,8 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
 
       mappedResults.append({
         "category": categoryPath,
-        "rule": ruleContent[:300],
+        "rule": ruleContent,
+        # "rule": ruleContent[:300],
         "mappedTTPs": ttpMatches if ttpMatches else None
       })
 
@@ -789,8 +796,8 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
   unmatchedRules = []
 
   # Pattern to match rule name
-  # rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
-  rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)\s*\{', re.MULTILINE)
+  rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
+  # rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)\s*\{', re.MULTILINE)
 
   
   # Convert the uncategorizedMap keys to lowercase
@@ -843,7 +850,8 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
         # Add the rule to mappedSet with its TTP matches (if any)
         mappedSet.append({
           "category": category,
-          "rule": rule[:300],  # Limiting the rule string to 300 characters
+          "rule": rule,
+          # "rule": rule[:300],
           "mappedTTPs": ttpMatches if ttpMatches else None
         })
 

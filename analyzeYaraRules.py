@@ -1,5 +1,6 @@
 from datetime import datetime
 import argparse
+import assignConfidenceToYaraRules as assign
 import json
 import os
 import re
@@ -76,7 +77,7 @@ def detectDuplicates(yaraFiles, duplicateFilePath):
 
   return filesProcessed, rulesProcessed
 
-def injectMetaCategory(ruleContent, category, matchedKeyword):
+def injectMetaCategory(ruleContent, category, matchedKeyword, confidenceScore):
   rulePattern = re.compile(r'^\s*((?:private|global)?\s*(?:private|global)?\s*rule\s+[a-zA-Z0-9_]+)', re.MULTILINE)
   parts = rulePattern.split(ruleContent)
 
@@ -98,16 +99,17 @@ def injectMetaCategory(ruleContent, category, matchedKeyword):
         beforeMeta = ruleBody[:stringsStart]
         afterMeta = ruleBody[stringsStart:]
 
-        if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta:
-          injected = f'  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n'
+        if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta and 'confidence' not in beforeMeta:
+          injected = f'    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    confidence = "{confidenceScore}"\n'
           ruleBody = beforeMeta.rstrip() + '\n' + injected + afterMeta
         else:
           ruleBody = re.sub(r'(category\s*=\s*".*?")', f'category = "{category}"', ruleBody)
           ruleBody = re.sub(r'(matchedKeyword\s*=\s*".*?")', f'matchedKeyword = "{matchedKeyword}"', ruleBody)
+          ruleBody = re.sub(r'(confidence\s*=\s*".*?")', f'confidence = "{confidenceScore}"', ruleBody)
     else:
       ruleBody = ruleBody.replace(
         'strings:',
-        f'meta:\n  category = "{category}"\n  matchedKeyword = "{matchedKeyword}"\n  strings:',
+        f'meta:\n    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    confidence = "{confidenceScore}"\n  strings:',
         1
       )
 
@@ -132,6 +134,7 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
   for file in yaraFiles:
     with open(file, 'r', encoding='utf-8', errors='ignore') as f:
       lines = f.readlines()
+
     ruleContent = ''.join(lines)
     ruleContentLower = ruleContent.lower()
 
@@ -176,8 +179,11 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
           uncategorizedCount += 1
         else:
           categorizedCount += 1
+        
+        # Assign confidence score
+        score = assign.scoreYaraRule(ruleContent)
 
-        ruleContent = injectMetaCategory(ruleContent, category, matchedKeyword)
+        ruleContent = injectMetaCategory(ruleContent, category, matchedKeyword, score)
 
         destPath = os.path.join(checkedDir, category, fileName)
         with open(destPath, 'w', encoding='utf-8') as outputFile:
