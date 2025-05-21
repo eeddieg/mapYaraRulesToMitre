@@ -21,6 +21,7 @@ Once **`analyzeYaraRules.py`** has completed, run the **`yaraToMitre.py`** scrip
 - **Outcome**: Generates a report on which MITRE techniques and tactics correspond to the YARA rules, along with unmatched rules.
 
 **Key Features**:
+
 - Supports mapping for a wide range of MITRE ATT&CK tactics and techniques.
 - Generates both a CSV and a JSON output for the rule-to-attack mappings.
 - Logs unmatched YARA rules and file names containing those rules.
@@ -43,7 +44,7 @@ This script can be run independently or after analyzing YARA rules to assign a *
 python analyzeYaraRules.py -D /path/to/yara-rules
 ```
 
-2. **Run `yaraToMitre.py`** to map the analyzed YARA rules to the MITRE ATT&CK framework.
+1. **Run `yaraToMitre.py`** to map the analyzed YARA rules to the MITRE ATT&CK framework.
 
 ```bash
 python yaraToMitre.py -D /path/to/yara-rules

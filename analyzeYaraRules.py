@@ -82,13 +82,13 @@ def injectMetaCategory(ruleContent, category, matchedKeyword, score):
   parts = rulePattern.split(ruleContent)
 
   if not parts or len(parts) < 2:
-    return ruleContent # No rule detected
+    return ruleContent  # No rule detected
 
-  rebuilt = parts[0] # Anything before the first rule (e.g., includes or comments)
+  rebuilt = parts[0]  # Header comments, includes, etc.
 
   for i in range(1, len(parts), 2):
-    ruleHeader = parts[i]   # full "private rule Something"
-    ruleBody = parts[i + 1] # rule body starts after the header
+    ruleHeader = parts[i]
+    ruleBody = parts[i + 1]
 
     if 'meta:' in ruleBody:
       metaStart = ruleBody.find('meta:')
@@ -99,13 +99,21 @@ def injectMetaCategory(ruleContent, category, matchedKeyword, score):
         beforeMeta = ruleBody[:stringsStart]
         afterMeta = ruleBody[stringsStart:]
 
-        if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta and 'score' not in beforeMeta:
-          injected = f'    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    score = "{score}"\n'
-          ruleBody = beforeMeta.rstrip() + '\n' + injected + afterMeta
-        else:
-          ruleBody = re.sub(r'(category\s*=\s*".*?")', f'category = "{category}"', ruleBody)
-          ruleBody = re.sub(r'(matchedKeyword\s*=\s*".*?")', f'matchedKeyword = "{matchedKeyword}"', ruleBody)
-          ruleBody = re.sub(r'(score\s*=\s*".*?")', f'score = "{score}"', ruleBody)
+        # Extract meta section lines
+        metaLines = beforeMeta.strip().splitlines()
+        metaKeys = {line.strip().split('=')[0].strip() for line in metaLines if '=' in line}
+
+        injectedLines = []
+        if 'category' not in metaKeys:
+          injectedLines.append(f'    category = "{category}"')
+        if 'matchedKeyword' not in metaKeys:
+          injectedLines.append(f'    matchedKeyword = "{matchedKeyword}"')
+        if 'score' not in metaKeys:
+          injectedLines.append(f'    score = "{score}"')
+
+        if injectedLines:
+          injected = '\n' + '\n'.join(injectedLines)
+          ruleBody = beforeMeta.rstrip() + injected + '\n' + afterMeta
     else:
       ruleBody = ruleBody.replace(
         'strings:',
@@ -116,6 +124,7 @@ def injectMetaCategory(ruleContent, category, matchedKeyword, score):
     rebuilt += ruleHeader + ruleBody
 
   return rebuilt
+
 
 def categorizeRules(yaraFiles, checkedDir, keywordCategories):
   categorizedCount = 0
@@ -143,9 +152,11 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
     parentDir = os.path.basename(os.path.dirname(file)).lower()
 
     for line in lines:
-      match = re.match(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)', line)
+      # match = re.match(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)', line)
+      match = re.match(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)\s*:?\s([a-zA-Z0-9_]+\s?)*', line)
       if match:
         ruleName = match.group(1)
+        ruleCategory = match.group(2) # for rules: rule ruleName : ruleCategory{}
         ruleNameLower = ruleName.lower()
         category = 'uncategorized'
         matchedKeyword = None

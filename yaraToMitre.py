@@ -729,6 +729,7 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
 
   for categoryPath, rules in yaraByCategory.items():
     counters['filesRead'] += 1
+
     folderCategory = categoryPath.split(os.sep)[-2]  # Extract the folder name
 
     for ruleContent in rules:
@@ -811,7 +812,14 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
       ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
       if ruleCategoryMatch:
         # Extract category
-        category = ruleCategoryMatch.group(1).split("/")[1]
+        # category = ruleCategoryMatch.group(1).split("/")[1]
+        category = ""
+        groupList = ruleCategoryMatch.group(1).split("/")
+        listLength = len(groupList)
+        if listLength > 1:
+          category = groupList[1]
+        elif listLength == 1:
+          category = groupList[0]
 
       # Extract matchedKeyword from rule's meta
       ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
