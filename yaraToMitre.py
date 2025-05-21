@@ -328,7 +328,6 @@ uncategorizedMap =  {
 }
 
 def createDictionary():
-
   malware = {
     "malware": [
       ["TA0001", "Initial Access", "T1071", "Application Layer Protocol", None, None],
@@ -682,7 +681,7 @@ def mapTechniquesWithSubtechniques(allTechniques, tacticMap):
         "subtechniqueId": techniqueId,
         "name": name,
         "tactics": tacticsList,
-        "confidence": 75,
+        "score": 75,
       }
     else:
       techniqueMap[techniqueId] = {
@@ -690,12 +689,11 @@ def mapTechniquesWithSubtechniques(allTechniques, tacticMap):
         "subtechniqueId": None,
         "name": name,
         "tactics": tacticsList,
-        "confidence": 90,
+        "score": 90,
       }
   return techniqueMap
 
-
-  return allMatches, unmatchedRules, totalRules, matchedCount, unmatchedCount
+  # return allMatches, unmatchedRules, totalRules, matchedCount, unmatchedCount
 
 def readYaraFilesByCategory(directory):
   yaraByCategory = {}
@@ -708,9 +706,7 @@ def readYaraFilesByCategory(directory):
       with open(filePath, "r", encoding="utf-8") as f:
         content = f.read()
 
-        # ruleMatches = re.findall(r"rule\s+.*?\{.*?\}", content, re.DOTALL)
         ruleMatches = re.findall(r"rule\s+.*?\{.*?\}", content, re.DOTALL)
-        # ruleMatches = re.findall(r"^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)", content, re.DOTALL)
 
         if category not in yaraByCategory:
           yaraByCategory[category] = []
@@ -733,9 +729,7 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
 
   for categoryPath, rules in yaraByCategory.items():
     counters['filesRead'] += 1
-    # folderCategory = categoryPath.split(os.sep)[-1]  # Extract the folder name
     folderCategory = categoryPath.split(os.sep)[-2]  # Extract the folder name
-    # print(f"{Colors.red}{folderCategory}{Colors.reset}")
 
     for ruleContent in rules:
       counters['rulesProcessed'] += 1
@@ -744,18 +738,18 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       # Extract category and matchedKeyword from the rule's meta
       category = ""
       matchedKeyword = ""
-      confidenceScore = ""
+      score = ""
 
       ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
       ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
-      ruleConfidenceScoreMatch = re.search(r'confidence\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+      ruleScoreMatch = re.search(r'score\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
       
       if ruleCategoryMatch:
         category = ruleCategoryMatch.group(1)
       if ruleMatchedKeywordMatch:
         matchedKeyword = ruleMatchedKeywordMatch.group(1)
-      if ruleConfidenceScoreMatch:
-        confidenceScore = ruleConfidenceScoreMatch.group(1)
+      if ruleScoreMatch:
+        score = ruleScoreMatch.group(1)
 
       # Check if category exists in categoryToMitreMapping
       if category in mitreMapping:
@@ -774,7 +768,7 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
                 "technique": technique,
                 "subtechniqueId": subtechniqueId,
                 "subtechnique": subtechnique,
-                "confidence": confidenceScore
+                "score": score
               })
 
         counters['rulesMatched'] += 1
@@ -798,7 +792,6 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
   # Pattern to match rule name
   rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
   # rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)\s*\{', re.MULTILINE)
-
   
   # Convert the uncategorizedMap keys to lowercase
   uncategorizedMapLowercase = {key.lower(): value for key, value in uncategorizedMap.items()}
@@ -840,7 +833,7 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
             "technique": technique,
             "subtechniqueId": subtechniqueId,
             "subtechnique": subtechnique,
-            "confidence": 50
+            "score": 50
           })
 
         # If a match is found, reduce unmatched counter
@@ -963,7 +956,7 @@ def main():
   # Save results as JSON
   with open(outputJsonPath, "w") as f:
     json.dump(mappedResults, f, indent=2) 
-  print(f"Mapped rules are stored in {Colors.blueBold}{outputJsonPath}{Colors.reset}n")
+  print(f"Mapped rules are stored in {Colors.blueBold}{outputJsonPath}{Colors.reset}")
 
   # Write unmatched rules to a file
   with open(logPath, "w") as f:

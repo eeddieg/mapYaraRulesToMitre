@@ -10,8 +10,8 @@ This toolkit contains a set of Python scripts used to map YARA rules to the [MIT
 
 Before running the **`yaraToMitre.py`** script, **`analyzeYaraRules.py`** must first be executed. This script performs the initial analysis on YARA rules to prepare the necessary data, ensuring that the subsequent mapping process can occur correctly.
 
-- **Purpose**: Analyzes YARA rule files in the specified directory.
-- **Outcome**: Outputs a processed list of YARA rules with necessary metadata for the mapping step.
+- **Purpose**: Analyzes YARA rule files in the specified directory, detects duplicates, categorizes rules, and injects metadata.
+- **Outcome**: Outputs categorized YARA rules with confidence scores and generates a duplicate report file.
 
 ### `yaraToMitre.py`
 
@@ -26,11 +26,18 @@ Once **`analyzeYaraRules.py`** has completed, run the **`yaraToMitre.py`** scrip
 - Logs unmatched YARA rules and file names containing those rules.
 - Supports advanced MITRE ATT&CK mappings with subtechniques and tactics identification.
 
+### `assignScoreToYaraRules.py`
+
+This script can be run independently or after analyzing YARA rules to assign a **confidence score** to each rule. It evaluates the completeness and quality of each rule based on structure and metadata.
+
+- **Purpose**: Assigns a score (0-100) to each YARA rule based on its structural and semantic quality.
+- **Outcome**: Generates a JSON report of all rules and their corresponding confidence scores.
+
 ---
 
 ## **Required Workflow**
 
-1. **Run `analyzeYaraRules.py`** to analyze the YARA rules and prepare the data.
+1. **Run `analyzeYaraRules.py`** to analyze the YARA rules and prepare the data. **`assignScoreToYaraRules.py`** is called automatically to assign scores to each rule.
 
 ```bash
 python analyzeYaraRules.py -D /path/to/yara-rules
@@ -66,4 +73,3 @@ pip install mitreattack-python pandas requests
 This toolkit is distributed under the GPL-3.0 license.
 
 Portions of the scoring methodology or heuristic strategies referenced in this toolkit are adapted from the [YARA Style Guide by Neo23x0](https://github.com/Neo23x0/YARA-Style-Guide), licensed under [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html).
-

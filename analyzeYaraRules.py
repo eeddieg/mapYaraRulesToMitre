@@ -1,6 +1,6 @@
 from datetime import datetime
 import argparse
-import assignConfidenceToYaraRules as assign
+import assignScoreToYaraRules as assign
 import json
 import os
 import re
@@ -77,7 +77,7 @@ def detectDuplicates(yaraFiles, duplicateFilePath):
 
   return filesProcessed, rulesProcessed
 
-def injectMetaCategory(ruleContent, category, matchedKeyword, confidenceScore):
+def injectMetaCategory(ruleContent, category, matchedKeyword, score):
   rulePattern = re.compile(r'^\s*((?:private|global)?\s*(?:private|global)?\s*rule\s+[a-zA-Z0-9_]+)', re.MULTILINE)
   parts = rulePattern.split(ruleContent)
 
@@ -99,17 +99,17 @@ def injectMetaCategory(ruleContent, category, matchedKeyword, confidenceScore):
         beforeMeta = ruleBody[:stringsStart]
         afterMeta = ruleBody[stringsStart:]
 
-        if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta and 'confidence' not in beforeMeta:
-          injected = f'    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    confidence = "{confidenceScore}"\n'
+        if 'category' not in beforeMeta and 'matchedKeyword' not in beforeMeta and 'score' not in beforeMeta:
+          injected = f'    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    score = "{score}"\n'
           ruleBody = beforeMeta.rstrip() + '\n' + injected + afterMeta
         else:
           ruleBody = re.sub(r'(category\s*=\s*".*?")', f'category = "{category}"', ruleBody)
           ruleBody = re.sub(r'(matchedKeyword\s*=\s*".*?")', f'matchedKeyword = "{matchedKeyword}"', ruleBody)
-          ruleBody = re.sub(r'(confidence\s*=\s*".*?")', f'confidence = "{confidenceScore}"', ruleBody)
+          ruleBody = re.sub(r'(score\s*=\s*".*?")', f'score = "{score}"', ruleBody)
     else:
       ruleBody = ruleBody.replace(
         'strings:',
-        f'meta:\n    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    confidence = "{confidenceScore}"\n  strings:',
+        f'meta:\n    category = "{category}"\n    matchedKeyword = "{matchedKeyword}"\n    score = "{score}"\n  strings:',
         1
       )
 
@@ -242,7 +242,7 @@ def processYaraRules(rulesDir, outputDir, duplicateFile, categories=defaultCateg
   print(f"{Colors.greenBold}[*]{Colors.reset} Rules Processed: {Colors.yellow}{rulesProcessed}{Colors.reset}")
   print(f"{Colors.greenBold}[*]{Colors.reset} Rules Categorized: {Colors.green}{categorizedCount}{Colors.reset}")
   print(f"{Colors.yellowBold}[!]{Colors.reset} Uncategorized rules: {Colors.red}{uncategorizedCount}{Colors.reset}")
-  print(f"\n{Colors.greenBold}[*]{Colors.reset} Categorization completed. Categorized rules are stored in {Colors.yellow}{outputDir}{Colors.reset}/")
+  print(f"\n{Colors.greenBold}[*]{Colors.reset} Categorization completed. Categorized rules are stored in {Colors.yellow}{outputDir}{Colors.reset}\n")
 
 def main():
   duplicateFile = "yara.rules.duplicate.txt"
