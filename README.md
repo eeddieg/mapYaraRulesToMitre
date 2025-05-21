@@ -57,3 +57,12 @@ To install the required packages, run:
 
 ```bash
 pip install mitreattack-python pandas requests
+
+---
+
+## **License and Attribution**
+
+This toolkit is distributed under the GPL-3.0 license.
+
+Portions of the scoring methodology or heuristic strategies referenced in this toolkit are adapted from the [YARA Style Guide by Neo23x0](https://github.com/Neo23x0/YARA-Style-Guide), licensed under [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html).
+

@@ -112,17 +112,86 @@ def readYaraFiles(directory):
 
   return ruleList
 
+# # Scoring system based on rule structure
+# def scoreYaraRule(ruleText):
+#   score = 0
+
+#   # --- Meta Scoring ---
+#   metaMatches = re.findall(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
+#   if metaMatches:
+#     metaBlock = metaMatches[0][0]
+
+#     score += 10
+#     if re.search(r'description\s*=', metaBlock):
+#       score += 5
+#     if re.search(r'reference\s*=', metaBlock):
+#       score += 5
+#     if re.search(r'malwareFamily\s*=', metaBlock, re.IGNORECASE):
+#       score += 5
+#     if re.search(r'author\s*=', metaBlock):
+#       score += 3
+#     if re.search(r'date\s*=', metaBlock):
+#       score += 2
+
+#   # --- Strings Section ---
+#   stringsMatch = re.findall(r'strings:\s*(.*?)\s*condition:', ruleText, re.DOTALL)
+#   if stringsMatch:
+#     stringsBlock = stringsMatch[0]
+#     stringEntries = re.findall(r'\$[a-zA-Z0-9_]+\s*=\s*.*', stringsBlock)
+#     stringCount = len(stringEntries)
+
+#     if stringCount > 0:
+#       score += 10
+#       score += min(stringCount * 2, 10)
+
+#       for s in stringEntries:
+#         modifiers = re.findall(r'\b(ascii|nocase|wide|fullword|xor)\b', s)
+#         score += min(len(modifiers), 5)
+
+#   # --- Condition ---
+#   conditionMatch = re.search(r'condition:\s*(.*?)\s*\}', ruleText, re.DOTALL)
+#   if conditionMatch:
+#     condition = conditionMatch.group(1)
+#     score += 10
+#     logicOps = re.findall(r'\b(and|or|not)\b', condition, re.IGNORECASE)
+#     score += min(len(logicOps), 10)
+
+#     if re.search(r'\bfor\s+(all|any|\d+\s+of)\b', condition):
+#       score += 10
+
+#   # --- Imports ---
+#   importMatches = re.findall(r'import\s+"(.*?)"', ruleText)
+#   if importMatches:
+#     score += min(len(importMatches) * 2, 10)
+
+#   # --- External Variables ---
+#   externals = re.findall(r'externals?:\s*.*', ruleText)
+#   if externals:
+#     score += min(len(externals), 5)
+
+#   # --- Rule-level Quality ---
+#   if re.match(r'\s*(private\s+)?rule\s+', ruleText):
+#     score += 2
+#   if re.search(r'tags\s*=', ruleText):
+#     tagMatches = re.findall(r'tags\s*=\s*\[(.*?)\]', ruleText)
+#     if tagMatches:
+#       tags = tagMatches[0].split(',')
+#       score += min(len(tags), 5)
+
+#   return min(score, 100)
+
+# Scoring system based on https://github.com/Neo23x0/YARA-Style-Guide
 def scoreYaraRule(ruleText):
   score = 0
 
-  # --- Meta Scoring ---
-  metaMatches = re.findall(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
-  if metaMatches:
-    metaBlock = metaMatches[0][0]
+  # --- Meta Section ---
+  metaMatch = re.search(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
+  if metaMatch:
+    metaBlock = metaMatch.group(1)
+    score += 10  # base meta score
 
-    score += 10
     if re.search(r'description\s*=', metaBlock):
-      score += 5
+      score += 10
     if re.search(r'reference\s*=', metaBlock):
       score += 5
     if re.search(r'malwareFamily\s*=', metaBlock, re.IGNORECASE):
@@ -133,49 +202,53 @@ def scoreYaraRule(ruleText):
       score += 2
 
   # --- Strings Section ---
-  stringsMatch = re.findall(r'strings:\s*(.*?)\s*condition:', ruleText, re.DOTALL)
+  stringsMatch = re.search(r'strings:\s*(.*?)\s*condition:', ruleText, re.DOTALL)
   if stringsMatch:
-    stringsBlock = stringsMatch[0]
-    stringEntries = re.findall(r'\$[a-zA-Z0-9_]+\s*=\s*.*', stringsBlock)
-    stringCount = len(stringEntries)
+    stringsBlock = stringsMatch.group(1)
+    strings = re.findall(r'\$[a-zA-Z0-9_]+\s*=\s*.*', stringsBlock)
+    stringCount = len(strings)
 
     if stringCount > 0:
       score += 10
-      score += min(stringCount * 2, 10)
+      score += min(stringCount * 2, 10)  # max +10 for # of strings
 
-      for s in stringEntries:
-        modifiers = re.findall(r'\b(ascii|nocase|wide|fullword|xor)\b', s)
-        score += min(len(modifiers), 5)
-
-  # --- Condition ---
+      for stringLine in strings:
+        if re.search(r'\bxor\b', stringLine):
+          score += 2
+        if re.search(r'\b(wide|ascii|nocase|fullword)\b', stringLine):
+          score += 1  # reward each modifier (up to 5 total)
+    
+  # --- Condition Section ---
   conditionMatch = re.search(r'condition:\s*(.*?)\s*\}', ruleText, re.DOTALL)
   if conditionMatch:
-    condition = conditionMatch.group(1)
-    score += 10
-    logicOps = re.findall(r'\b(and|or|not)\b', condition, re.IGNORECASE)
-    score += min(len(logicOps), 10)
+    conditionBlock = conditionMatch.group(1)
 
-    if re.search(r'\bfor\s+(all|any|\d+\s+of)\b', condition):
+    score += 10  # base score for condition presence
+
+    if re.search(r'\b(for\s+all|for\s+any|\d+\s+of)\b', conditionBlock):
       score += 10
+    if re.search(r'\b(and|or|not)\b', conditionBlock, re.IGNORECASE):
+      logicOps = re.findall(r'\b(and|or|not)\b', conditionBlock, re.IGNORECASE)
+      score += min(len(logicOps), 5)
 
-  # --- Imports ---
-  importMatches = re.findall(r'import\s+"(.*?)"', ruleText)
+  # --- Import Section ---
+  importMatches = re.findall(r'import\s+"[^"]+"', ruleText)
   if importMatches:
     score += min(len(importMatches) * 2, 10)
 
   # --- External Variables ---
-  externals = re.findall(r'externals?:\s*.*', ruleText)
-  if externals:
-    score += min(len(externals), 5)
+  externalMatches = re.findall(r'external\s+[a-zA-Z0-9_]+', ruleText)
+  score += min(len(externalMatches), 5)
 
-  # --- Rule-level Quality ---
-  if re.match(r'\s*(private\s+)?rule\s+', ruleText):
+  # --- Tags Section ---
+  tagsMatch = re.search(r'tags\s*=\s*\[(.*?)\]', ruleText)
+  if tagsMatch:
+    tags = [tag.strip() for tag in tagsMatch.group(1).split(',')]
+    score += min(len(tags), 5)
+
+  # --- Rule Declaration ---
+  if re.match(r'\s*(private\s+)?rule\s+\w+', ruleText):
     score += 2
-  if re.search(r'tags\s*=', ruleText):
-    tagMatches = re.findall(r'tags\s*=\s*\[(.*?)\]', ruleText)
-    if tagMatches:
-      tags = tagMatches[0].split(',')
-      score += min(len(tags), 5)
 
   return min(score, 100)
 
