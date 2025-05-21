@@ -57,6 +57,7 @@ To install the required packages, run:
 
 ```bash
 pip install mitreattack-python pandas requests
+```
 
 ---
 
