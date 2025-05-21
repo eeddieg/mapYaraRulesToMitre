@@ -323,7 +323,7 @@ def assignScoreToRules(ruleList, outputPath):
         results.append({
           "ruleName": ruleName,
           "yaraRule": ruleContent.strip(),
-          "confidence": score
+          "score": score
         })
         uniqueScores.add(score)
         ruleCount += 1
