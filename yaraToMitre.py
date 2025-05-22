@@ -604,7 +604,7 @@ def createDictionary():
   return categoryToMitreMapping
 
 def reset():
-  dir1 = "checkedRules"
+  dir1 = "categorizedRules"
   dir2 = "mappings"
   duplicateFile = "yara.rules.duplicate.txt"
 
@@ -716,6 +716,43 @@ def readYaraFilesByCategory(directory):
 
   return yaraByCategory
 
+def getAddedInfoFromRule(ruleContent, isCategorized, ruleName=""):
+  category = ""
+  matchedKeyword = ""
+  score = ""
+
+  ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+  ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+  ruleScoreMatch = re.search(r'score\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
+  
+  if isCategorized:
+    if ruleCategoryMatch:
+      category = ruleCategoryMatch.group(1)
+    if ruleMatchedKeywordMatch:
+      matchedKeyword = ruleMatchedKeywordMatch.group(1)
+  else:
+    if ruleCategoryMatch:      
+      groupList = ruleCategoryMatch.group(1).split("/")
+      listLength = len(groupList)
+      if listLength > 1:
+        category = groupList[1]
+      elif listLength == 1:
+        category = groupList[0]
+
+    if ruleMatchedKeywordMatch:
+      matchedKeyword = ruleMatchedKeywordMatch.group(1)
+  
+  if ruleScoreMatch:
+    score = ruleScoreMatch.group(1)
+
+  try:
+    if isinstance(score, str):
+      score = int(score)
+  except Exception as ex:
+    pass
+  
+  return category, matchedKeyword, score
+
 def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
   mappedResults = []
   unmatchedRules = []
@@ -736,21 +773,9 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       counters['rulesProcessed'] += 1
       ttpMatches = []
 
-      # Extract category and matchedKeyword from the rule's meta
-      category = ""
-      matchedKeyword = ""
-      score = ""
-
-      ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
-      ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
-      ruleScoreMatch = re.search(r'score\s*=\s*\"([^\"]+)\"', ruleContent, re.DOTALL)
-      
-      if ruleCategoryMatch:
-        category = ruleCategoryMatch.group(1)
-      if ruleMatchedKeywordMatch:
-        matchedKeyword = ruleMatchedKeywordMatch.group(1)
-      if ruleScoreMatch:
-        score = ruleScoreMatch.group(1)
+      # Extract category, matchedKeyword and score from the rule's meta
+      isCategorized = True
+      category, matchedKeyword, score = getAddedInfoFromRule(ruleContent, isCategorized)
 
       # Check if category exists in categoryToMitreMapping
       if category in mitreMapping:
@@ -777,18 +802,19 @@ def mapYaraToMitre(yaraByCategory, yaraToAttack, mitreMapping):
       if not ttpMatches:
         counters['rulesUnmatched'] += 1
         unmatchedRules.append(ruleContent)
-
-      mappedResults.append({
-        "category": categoryPath,
-        "rule": ruleContent,
-        # "rule": ruleContent[:300],
-        "mappedTTPs": ttpMatches if ttpMatches else None
-      })
+      else:
+        mappedResults.append({
+          "category": categoryPath,
+          "rule": ruleContent,
+          # "rule": ruleContent[:300],
+          "mappedTTPs": ttpMatches
+        })
 
   return mappedResults, unmatchedRules, counters
 
 def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
   unmatchedRules = []
+  score = 0
 
   # Pattern to match rule name
   rulePattern = re.compile(r'^\s*rule\s+([a-zA-Z0-9_]+)')
@@ -805,26 +831,10 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
     if match:
       ttpMatches = []
       ruleName = match.group(1).lower()
-      category = ""
-      matchedKeyword = ""
 
-      # Extract category from rule's meta
-      ruleCategoryMatch = re.search(r'category\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
-      if ruleCategoryMatch:
-        # Extract category
-        # category = ruleCategoryMatch.group(1).split("/")[1]
-        category = ""
-        groupList = ruleCategoryMatch.group(1).split("/")
-        listLength = len(groupList)
-        if listLength > 1:
-          category = groupList[1]
-        elif listLength == 1:
-          category = groupList[0]
-
-      # Extract matchedKeyword from rule's meta
-      ruleMatchedKeywordMatch = re.search(r'matchedKeyword\s*=\s*\"([^\"]+)\"', rule, re.DOTALL)
-      if ruleMatchedKeywordMatch:
-        matchedKeyword = ruleMatchedKeywordMatch.group(1)
+      # Extract category, matchedKeyword and score from the rule's meta
+      isCategorized = False
+      category, matchedKeyword, score = getAddedInfoFromRule(rule, isCategorized, ruleName)
 
       # Try to match ruleName against uncategorizedMap (now using lowercase for comparison)
       if ruleName in uncategorizedMapLowercase:
@@ -841,7 +851,7 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
             "technique": technique,
             "subtechniqueId": subtechniqueId,
             "subtechnique": subtechnique,
-            "score": 50
+            "score": score
           })
 
         # If a match is found, reduce unmatched counter
@@ -861,6 +871,17 @@ def resolveUncategorized(mappedSet, unmappedSet, counters, uncategorizedMap):
       unmatchedRules.append(rule)
 
   return mappedSet, unmatchedRules, counters
+
+def saveToCsv(mappedResults):
+  # Convert the set of unique results back to a list and create DataFrame
+  uniqueResultsList = [item for item in mappedResults]  # No need to parse JSON again
+  df = pd.DataFrame(uniqueResultsList)
+
+  if df.empty:
+    print("No data to write to CSV.")
+  else:
+    df.to_csv(outputCsvPath, index=False, sep=",", quoting=1, quotechar='"')
+    print(f"Mapped rules are stored in {Colors.blueBold}{outputCsvPath}{Colors.reset}\n")
 
 def main():
   # File paths
@@ -944,22 +965,14 @@ def main():
   else:
     print(f"\n{Colors.greenBold}Mapping complete!{Colors.red} There are unmatched rules!{Colors.reset}\n")
 
-  print(f"\n{Colors.blueBold}Summary:{Colors.reset}")
+  print(f"{Colors.blueBold}Summary:{Colors.reset}")
   print(f"Files Read       : {Colors.blue}{counters['filesRead']}{Colors.reset}")
   print(f"Rules Processed  : {Colors.yellow}{counters['rulesProcessed']}{Colors.reset}")
   print(f"Rules Matched    : {Colors.green}{counters['rulesMatched']}{Colors.reset}")
   print(f"Rules Unmatched  : {Colors.red}{counters['rulesUnmatched']}{Colors.reset}\n")
 
-  # # Convert the set of unique results back to a list and create DataFrame
-  # uniqueResultsList = [item for item in mappedResults]  # No need to parse JSON again
-  # df = pd.DataFrame(uniqueResultsList)
-
-  # if df.empty:
-  #     print("No data to write to CSV.")
-  # else:
-  #     df.to_csv(outputCsvPath, index=False, sep=",", quoting=1, quotechar='"')
-  #     print(f"Mapped rules are stored in {Colors.blueBold}{outputCsvPath}{Colors.reset}\n")
-
+  # # Save results as CSV
+  # saveToCsv(mappedResults)
 
   # Save results as JSON
   with open(outputJsonPath, "w") as f:

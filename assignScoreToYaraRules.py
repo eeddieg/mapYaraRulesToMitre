@@ -112,73 +112,74 @@ def readYaraFiles(directory):
 
   return ruleList
 
-# # Scoring system based on rule structure
-# def scoreYaraRule(ruleText):
-#   score = 0
+############## NOT USED ################
+# Scoring system based on rule structure
+def scoreYaraRuleOld(ruleText):
+  score = 0
 
-#   # --- Meta Scoring ---
-#   metaMatches = re.findall(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
-#   if metaMatches:
-#     metaBlock = metaMatches[0][0]
+  # --- Meta Scoring ---
+  metaMatches = re.findall(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
+  if metaMatches:
+    metaBlock = metaMatches[0][0]
 
-#     score += 10
-#     if re.search(r'description\s*=', metaBlock):
-#       score += 5
-#     if re.search(r'reference\s*=', metaBlock):
-#       score += 5
-#     if re.search(r'malwareFamily\s*=', metaBlock, re.IGNORECASE):
-#       score += 5
-#     if re.search(r'author\s*=', metaBlock):
-#       score += 3
-#     if re.search(r'date\s*=', metaBlock):
-#       score += 2
+    score += 10
+    if re.search(r'description\s*=', metaBlock):
+      score += 5
+    if re.search(r'reference\s*=', metaBlock):
+      score += 5
+    if re.search(r'malwareFamily\s*=', metaBlock, re.IGNORECASE):
+      score += 5
+    if re.search(r'author\s*=', metaBlock):
+      score += 3
+    if re.search(r'date\s*=', metaBlock):
+      score += 2
 
-#   # --- Strings Section ---
-#   stringsMatch = re.findall(r'strings:\s*(.*?)\s*condition:', ruleText, re.DOTALL)
-#   if stringsMatch:
-#     stringsBlock = stringsMatch[0]
-#     stringEntries = re.findall(r'\$[a-zA-Z0-9_]+\s*=\s*.*', stringsBlock)
-#     stringCount = len(stringEntries)
+  # --- Strings Section ---
+  stringsMatch = re.findall(r'strings:\s*(.*?)\s*condition:', ruleText, re.DOTALL)
+  if stringsMatch:
+    stringsBlock = stringsMatch[0]
+    stringEntries = re.findall(r'\$[a-zA-Z0-9_]+\s*=\s*.*', stringsBlock)
+    stringCount = len(stringEntries)
 
-#     if stringCount > 0:
-#       score += 10
-#       score += min(stringCount * 2, 10)
+    if stringCount > 0:
+      score += 10
+      score += min(stringCount * 2, 10)
 
-#       for s in stringEntries:
-#         modifiers = re.findall(r'\b(ascii|nocase|wide|fullword|xor)\b', s)
-#         score += min(len(modifiers), 5)
+      for s in stringEntries:
+        modifiers = re.findall(r'\b(ascii|nocase|wide|fullword|xor)\b', s)
+        score += min(len(modifiers), 5)
 
-#   # --- Condition ---
-#   conditionMatch = re.search(r'condition:\s*(.*?)\s*\}', ruleText, re.DOTALL)
-#   if conditionMatch:
-#     condition = conditionMatch.group(1)
-#     score += 10
-#     logicOps = re.findall(r'\b(and|or|not)\b', condition, re.IGNORECASE)
-#     score += min(len(logicOps), 10)
+  # --- Condition ---
+  conditionMatch = re.search(r'condition:\s*(.*?)\s*\}', ruleText, re.DOTALL)
+  if conditionMatch:
+    condition = conditionMatch.group(1)
+    score += 10
+    logicOps = re.findall(r'\b(and|or|not)\b', condition, re.IGNORECASE)
+    score += min(len(logicOps), 10)
 
-#     if re.search(r'\bfor\s+(all|any|\d+\s+of)\b', condition):
-#       score += 10
+    if re.search(r'\bfor\s+(all|any|\d+\s+of)\b', condition):
+      score += 10
 
-#   # --- Imports ---
-#   importMatches = re.findall(r'import\s+"(.*?)"', ruleText)
-#   if importMatches:
-#     score += min(len(importMatches) * 2, 10)
+  # --- Imports ---
+  importMatches = re.findall(r'import\s+"(.*?)"', ruleText)
+  if importMatches:
+    score += min(len(importMatches) * 2, 10)
 
-#   # --- External Variables ---
-#   externals = re.findall(r'externals?:\s*.*', ruleText)
-#   if externals:
-#     score += min(len(externals), 5)
+  # --- External Variables ---
+  externals = re.findall(r'externals?:\s*.*', ruleText)
+  if externals:
+    score += min(len(externals), 5)
 
-#   # --- Rule-level Quality ---
-#   if re.match(r'\s*(private\s+)?rule\s+', ruleText):
-#     score += 2
-#   if re.search(r'tags\s*=', ruleText):
-#     tagMatches = re.findall(r'tags\s*=\s*\[(.*?)\]', ruleText)
-#     if tagMatches:
-#       tags = tagMatches[0].split(',')
-#       score += min(len(tags), 5)
+  # --- Rule-level Quality ---
+  if re.match(r'\s*(private\s+)?rule\s+', ruleText):
+    score += 2
+  if re.search(r'tags\s*=', ruleText):
+    tagMatches = re.findall(r'tags\s*=\s*\[(.*?)\]', ruleText)
+    if tagMatches:
+      tags = tagMatches[0].split(',')
+      score += min(len(tags), 5)
 
-#   return min(score, 100)
+  return min(score, 100)
 
 # Scoring system based on https://github.com/Neo23x0/YARA-Style-Guide
 def scoreYaraRule(ruleText):
@@ -252,61 +253,6 @@ def scoreYaraRule(ruleText):
 
   return min(score, 100)
 
-def scoreYaraRuleJson(rule):
-  score = 0
-
-  # --- Meta Scoring ---
-  meta = rule.get("meta", {})
-  if meta:
-    score += 10
-    if "description" in meta:
-      score += 5
-    if "reference" in meta:
-      score += 5
-    if "malwareFamily" in meta:
-      score += 5
-    if "author" in meta:
-      score += 3
-    if "date" in meta:
-      score += 2
-
-  # --- Strings Section ---
-  strings = rule.get("strings", {})
-  stringCount = len(strings)
-  if stringCount > 0:
-    score += 10
-    score += min(stringCount * 2, 10)
-    for val in strings.values():
-      modifiers = val.get("modifiers", []) if isinstance(val, dict) else []
-      score += min(len(modifiers), 5)
-
-  # --- Condition ---
-  condition = rule.get("condition", "")
-  if condition:
-    score += 10
-    logicOps = re.findall(r'\b(and|or|not)\b', condition, re.IGNORECASE)
-    score += min(len(logicOps), 10)
-    if re.search(r'\bfor\s+(all|any|\d+\s+of)\b', condition):
-      score += 10
-
-  # --- Imports ---
-  imports = rule.get("imports", [])
-  if imports:
-    score += min(len(imports) * 2, 10)
-
-  # --- External Variables ---
-  externalVars = rule.get("externalVariables", [])
-  if externalVars:
-    score += min(len(externalVars), 5)
-
-  # --- Rule-level Quality ---
-  if rule.get("isPrivate"):
-    score += 2
-  if rule.get("tags"):
-    score += min(len(rule["tags"]), 5)
-
-  return min(score, 100)
-
 def assignScoreToRules(ruleList, outputPath):
   results = []
   uniqueScores = set()
@@ -317,9 +263,16 @@ def assignScoreToRules(ruleList, outputPath):
       for ruleContent in rules:
         match = re.search(r'\brule\s+(\w+)', ruleContent)
         ruleName = match.group(1) if match else "unknown"
-        
-        score = scoreYaraRule(ruleContent)
-        
+
+        score = checkExistingScore(ruleContent)
+        if score == -1:
+          score = scoreYaraRule(ruleContent)
+
+        try:
+          score = int(score)
+        except Exception as ex:
+          pass
+
         results.append({
           "ruleName": ruleName,
           "yaraRule": ruleContent.strip(),
@@ -338,6 +291,25 @@ def assignScoreToRules(ruleList, outputPath):
     print(f"{Colors.red}Error: Directory {directoryPath} not found.{Colors.reset}")
   except Exception as e:
     print(f"{Colors.red}An error occurred: {e}{Colors.reset}")
+
+def checkExistingScore(ruleText):
+  score = -1
+
+  match = re.search(r'\brule\s+(\w+)', ruleText)
+  ruleName = match.group(1) if match else "unknown"
+
+  metaMatch = re.search(r'meta:\s*(.*?)\s*(strings:|condition:)', ruleText, re.DOTALL)
+  if metaMatch:
+    metaBlock = metaMatch.group(1)
+    scoreMatch = re.search(r'score\s*=\s*[\',\"]?\d{1,2}[\',\"]?\s*', metaBlock)
+    if scoreMatch:
+      score = (scoreMatch.group(0)).split("=")[1].strip()
+    
+  if score != -1:
+    if not score.isalnum():
+      score = "".join(s for s in score if s.isalnum())
+
+  return score
 
 def main():
   outputDirectory = "confidence"
@@ -365,6 +337,8 @@ def main():
     exit(1)
 
   uniqueScores, ruleCount = assignScoreToRules(yaraRuleList, outputFilePath)
+
+  print(uniqueScores)
 
   print(f"\nTotal Rules Processed: {Colors.greenBold}{ruleCount}{Colors.reset}")
   print(f"\n{Colors.yellowBold}Unique Confidence Scores{Colors.reset}:")

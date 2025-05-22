@@ -1,4 +1,5 @@
 from datetime import datetime
+from multiprocessing import Pool, cpu_count
 import argparse
 import assignScoreToYaraRules as assign
 import json
@@ -6,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 # Default categories and associated keywords
 defaultCategories = {
@@ -125,11 +127,7 @@ def injectMetaCategory(ruleContent, category, matchedKeyword, score):
 
   return rebuilt
 
-
 def categorizeRules(yaraFiles, checkedDir, keywordCategories):
-  categorizedCount = 0
-  uncategorizedCount = 0
-
   # Precompile keywords once
   compiledCategories = {}
   for cat, keywords in keywordCategories.items():
@@ -211,6 +209,99 @@ def categorizeRules(yaraFiles, checkedDir, keywordCategories):
 
   return categorizedCount, uncategorizedCount
 
+def categorizeRulesParallel(yaraFiles, checkedDir, keywordCategories):
+  compiledCategories = {
+    cat: [re.compile(re.escape(k.strip()), re.IGNORECASE) for k in keywords.split(',')]
+    for cat, keywords in keywordCategories.items()
+  }
+
+  os.makedirs(os.path.join(checkedDir, 'uncategorized'), exist_ok=True)
+  for cat in keywordCategories.keys():
+    os.makedirs(os.path.join(checkedDir, cat), exist_ok=True)
+
+  with Pool(cpu_count()) as pool:
+    results = pool.starmap(
+      processSingleYaraFile,
+      [(file, checkedDir, compiledCategories) for file in yaraFiles]
+    )
+
+  categorizedCount = sum(r[0] for r in results)
+  uncategorizedCount = sum(r[1] for r in results)
+  
+  return categorizedCount, uncategorizedCount
+
+def processSingleYaraFile(file, checkedDir, compiledCategories):
+  categorizedCount = 0
+  uncategorizedCount = 0
+
+  try:
+    with open(file, 'r', encoding='utf-8', errors='ignore') as f:
+      lines = f.readlines()
+  except Exception as e:
+    print(f"Error reading file {file}: {e}")
+    return 0, 0
+
+  ruleContent = ''.join(lines)
+  ruleContentLower = ruleContent.lower()
+  fileName = os.path.basename(file)
+  fileNameNoExt = os.path.splitext(fileName)[0].lower()
+  parentDir = os.path.basename(os.path.dirname(file)).lower()
+
+  for line in lines:
+    match = re.match(r'^\s*(?:private|global)?\s*(?:private|global)?\s*rule\s+([a-zA-Z0-9_]+)\s*:?\s([a-zA-Z0-9_]+\s?)*', line)
+    if match:
+      ruleName = match.group(1)
+      ruleCategory = match.group(2)
+      ruleNameLower = ruleName.lower()
+      category = 'uncategorized'
+      matchedKeyword = None
+      folderMatched = False
+
+      for cat, patterns in compiledCategories.items():
+        for pattern in patterns:
+          if pattern.fullmatch(parentDir):
+            category = cat
+            matchedKeyword = pattern.pattern
+            folderMatched = True
+            break
+        if folderMatched:
+          break
+
+      if not folderMatched:
+        for cat, patterns in compiledCategories.items():
+          for pattern in patterns:
+            if pattern.search(ruleNameLower) or pattern.search(fileNameNoExt) or pattern.search(ruleContentLower):
+              category = cat
+              matchedKeyword = pattern.pattern
+              break
+          if category != 'uncategorized':
+            break
+
+      if category == 'uncategorized':
+        category = f"uncategorized/{parentDir}"
+        os.makedirs(os.path.join(checkedDir, category), exist_ok=True)
+        uncategorizedCount += 1
+      else:
+        categorizedCount += 1
+
+      score = assign.scoreYaraRule(ruleContent)
+      ruleContent = injectMetaCategory(ruleContent, category, matchedKeyword, score)
+
+      destPath = os.path.join(checkedDir, category, fileName)
+      with open(destPath, 'w', encoding='utf-8') as outputFile:
+        outputFile.write(ruleContent)
+
+      # Print out feedback on categorization
+      print(
+        f"{Colors.greenBold}[+]{Colors.reset} Categorized rule " 
+        f"{Colors.blue}#{categorizedCount}{Colors.reset} "
+        f"{Colors.green}{ruleName}{Colors.reset} from "
+        f"{Colors.yellow}{file}{Colors.reset} as "
+        f"{Colors.yellowBold}{category}{Colors.reset}"
+      )
+
+  return categorizedCount, uncategorizedCount
+
 def dumpCategoriesToFile(keywordCategories, file):
   with open(file, "w") as f:
     json.dump(keywordCategories, f, indent=2)
@@ -245,8 +336,11 @@ def processYaraRules(rulesDir, outputDir, duplicateFile, categories=defaultCateg
   print(f"\n{Colors.greenBold}[*]{Colors.reset} Duplicate scan completed. Results saved in {Colors.yellow}{duplicateFile}{Colors.reset}")
   print(f"\n{Colors.greenBold}[*]{Colors.reset} Categorizing YARA rules...\n")
 
-  # categorizeRules(yaraFiles, outputDir, categories)
-  categorizedCount, uncategorizedCount = categorizeRules(yaraFiles, outputDir, categories)
+  # Single thread
+  # categorizedCount, uncategorizedCount = categorizeRules(yaraFiles, outputDir, categories)
+  
+  # With concurrency
+  categorizedCount, uncategorizedCount = categorizeRulesParallel(yaraFiles, outputDir, categories)
 
   print(f"\n{Colors.greenBold}[*]{Colors.blueBold}Processing Summary:{Colors.reset}")
   print(f"{Colors.greenBold}[*]{Colors.reset} Files Processed: {Colors.blue}{filesProcessed}{Colors.reset}")
@@ -256,6 +350,8 @@ def processYaraRules(rulesDir, outputDir, duplicateFile, categories=defaultCateg
   print(f"\n{Colors.greenBold}[*]{Colors.reset} Categorization completed. Categorized rules are stored in {Colors.yellow}{outputDir}{Colors.reset}\n")
 
 def main():
+  startTime = time.time()
+
   duplicateFile = "yara.rules.duplicate.txt"
   outputCategoriesFile = "categories.json"
   outputCategorizedDir = "categorizedRules"
@@ -288,6 +384,16 @@ def main():
   outputDir = args.output
 
   processYaraRules(rulesDir, outputDir, duplicateFile, keywordCategories)
+  
+  # Time elapsed
+  endTime = time.time()
+  elapsedTime = endTime - startTime
+
+  hours, rem = divmod(elapsedTime, 3600)
+  minutes, seconds = divmod(rem, 60)
+
+  formatted_time = f"{hours:02}:{minutes:02}:{seconds:02}"
+  print(f"\n{Colors.greenBold}[*]{Colors.reset} Total execution time: {Colors.yellow}{formatted_time}{Colors.reset}\n")
 
 if __name__ == "__main__":
   main()
